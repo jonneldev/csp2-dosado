@@ -12,6 +12,9 @@ router.post("/", verify, orderController.checkout);
 // Retrieve order 
 router.get("/", verify, orderController.getOrders);
 
+// Cancel order 
+router.delete("/", verify, orderController.cancelOrder);
+
 // Retrieve all order (Admin only)
 router.get("/all", verify, verifyAdmin, orderController.getAllOrders);
 
