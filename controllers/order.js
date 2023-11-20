@@ -48,7 +48,7 @@ const checkout = async (req, res) => {
     // Calculate the total amount for the order
     const totalAmount = productsDetails.reduce((total, { totalPrice }) => total + totalPrice, 0);
 
-    // Create a new order instance and save it to the database
+    // Create a new order instance and save it to the database with status "pending"
     const order = new Order({
       userId,
       products: productsDetails.map(({ productId, productName, productPrice, quantity, totalPrice }) => ({
@@ -59,9 +59,19 @@ const checkout = async (req, res) => {
         totalPrice,
       })),
       totalAmount,
+      status: "pending",
     });
 
     await order.save();
+
+    // Set timeouts to change order status to "processing" after 1 minute and "shipped" after another 1 minute
+    setTimeout(async () => {
+      await Order.findByIdAndUpdate(order._id, { $set: { status: "processing" } });
+    }, 60000); // 1 minute
+
+    setTimeout(async () => {
+      await Order.findByIdAndUpdate(order._id, { $set: { status: "shipped" } });
+    }, 120000); // 2 minutes
 
     // Commit the transaction and end the session
     await session.commitTransaction();

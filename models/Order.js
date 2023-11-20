@@ -37,6 +37,11 @@ const orderSchema = new mongoose.Schema({
     type: Date,
     default: new Date(),
   },
+  status: {
+    type: String,
+    enum: ["pending", "processing", "shipped"],
+    default: "pending",
+  },
 });
 
 // Calculate total amount based on products and quantities
