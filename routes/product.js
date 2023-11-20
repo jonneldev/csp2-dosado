@@ -19,13 +19,13 @@ router.get("/active", productController.getActiveProducts);
 router.get("/:productId", productController.getSingleProduct);
 
 // Update product information (Admin only)
-router.put("/:productId", verify, verifyAdmin, productController.updateProduct);
+router.put("/:productId/update", verify, verifyAdmin, productController.updateProduct);
 
 // Archive product (Admin only)
-router.put("/:productId", verify, verifyAdmin, productController.archiveProduct);
+router.put("/:productId/archive", verify, verifyAdmin, productController.archiveProduct);
 
 // Activating product (Admin only)
-router.put("/:productId", verify, verifyAdmin, productController.activateProduct);
+router.put("/:productId/activate", verify, verifyAdmin, productController.activateProduct);
 
 // Remove product (Admin only)
 router.delete("/:productId", verify, verifyAdmin, productController.removeProduct);
