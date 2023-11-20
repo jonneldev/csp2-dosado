@@ -11,7 +11,7 @@ const cartRoutes = require("./routes/cart");
 const app = express();
 
 // Set the port for the server to listen on
-const port = process.env.PORT || 4000;
+const port = process.env.PORT || 4001;
 
 // Set the MongoDB URI for database connection
 const mongoURI = process.env.MONGODB_URI || "mongodb+srv://jonneldosadomain:admin123@cluster0.nnl816c.mongodb.net/ecommerce?retryWrites=true&w=majority";
@@ -40,10 +40,10 @@ mongoose.connection.on('error', (err) => {
 
 // [SECTION] Backend Routes
 // Mount user, product, order, and cart routes to specific paths
-app.use("/users", userRoutes);
-app.use("/products", productRoutes);
-app.use("/orders", orderRoutes);
-app.use("/cart", cartRoutes);
+app.use("/b1/users", userRoutes);
+app.use("/b1/products", productRoutes);
+app.use("/b1/orders", orderRoutes);
+app.use("/b1/cart", cartRoutes);
 
 // [SECTION] Error Handling Middleware
 // Middleware to handle errors and send a 500 status code with an error message
