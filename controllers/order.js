@@ -166,7 +166,7 @@ module.exports = {
   checkout,
   getOrders,
   getAllOrders,
-  cancelOrder
+  cancelOrder,
    // Add the new controller
   // ... (Export other functions as needed)
 };

@@ -13,7 +13,7 @@ router.post("/", verify, orderController.checkout);
 router.get("/", verify, orderController.getOrders);
 
 // Cancel order 
-router.delete("/", verify, orderController.cancelOrder);
+router.delete("/:orderId", verify, orderController.cancelOrder);
 
 // Retrieve all order (Admin only)
 router.get("/all", verify, verifyAdmin, orderController.getAllOrders);
