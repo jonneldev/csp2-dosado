@@ -1,3 +1,4 @@
+// routes/cart.js
 const express = require("express");
 const router = express.Router();
 const auth = require("../auth");
@@ -15,6 +16,7 @@ router.put("/:productId", verify, cartController.updateCartItem);
 router.delete("/:productId", verify, cartController.removeFromCart);
 
 // Route to get all products in the user's cart
-router.get("/", verify, cartController.getAllCartItems);
+router.get("/all", verify, cartController.getAllCartItems);
+
 
 module.exports = router;

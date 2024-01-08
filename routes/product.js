@@ -10,7 +10,7 @@ const { verify, verifyAdmin } = auth;
 router.post("/", verify, verifyAdmin, productController.createProduct);
 
 // Retrieve all products
-router.get("/", productController.getAllProducts);
+router.get("/all", productController.getAllProducts);
 
 // Retrieve active products
 router.get("/active", productController.getActiveProducts);
@@ -19,7 +19,7 @@ router.get("/active", productController.getActiveProducts);
 router.get("/:productId", productController.getSingleProduct);
 
 // Update product information (Admin only)
-router.put("/:productId/update", verify, verifyAdmin, productController.updateProduct);
+router.put("/:productId", verify, verifyAdmin, productController.updateProduct);
 
 // Archive product (Admin only)
 router.put("/:productId/archive", verify, verifyAdmin, productController.archiveProduct);
@@ -29,6 +29,8 @@ router.put("/:productId/activate", verify, verifyAdmin, productController.activa
 
 // Remove product (Admin only)
 router.delete("/:productId", verify, verifyAdmin, productController.removeProduct);
+
+router.post('/search', productController.searchProductsByName);
 
 // Exporting the router for use in other parts of the application
 module.exports = router;

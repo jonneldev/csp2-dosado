@@ -7,10 +7,10 @@ const auth = require("../auth");
 const { verify, verifyAdmin } = auth;
 
 // Creating order
-router.post("/", verify, orderController.checkout);
+router.post("/place", verify, orderController.placeOrder);
 
 // Retrieve order 
-router.get("/", verify, orderController.getOrders);
+router.get("/:orderId", verify, orderController.getOrders);
 
 // Cancel order 
 router.delete("/:orderId", verify, orderController.cancelOrder);

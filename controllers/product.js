@@ -73,81 +73,82 @@ const getSingleProduct = async (req, res) => {
   }
 };
 
-// Controller for updating a product (Admin only)
+
+
+//-------------//
 const updateProduct = async (req, res) => {
   try {
-    // Retrieve product ID and updated product information from the request
-    const productId = req.params.productId;
-    const { name, description, price, isActive, stock } = req.body;
+    // Specify the fields/properties of the document to be updated
+    let updatedProduct = {
+      name: req.body.name,
+      description: req.body.description,
+      price: req.body.price,
+      stock: req.body.stock
+    };
 
-    // Update the product in the database and get the updated product
-    const updatedProduct = await Product.findByIdAndUpdate(
-      productId,
-      { name, description, price, isActive, stock },
-      { new: true }
+    // Syntax
+    // findByIdAndUpdate(documentID, updatesToBeApplied, options)
+    const result = await Product.findByIdAndUpdate(
+      req.params.productId,
+      updatedProduct,
+      { new: true } // This option ensures that the updated document is returned
     );
 
-    // Check if the product exists
-    if (!updatedProduct) {
+    // Product not updated
+    if (!result) {
       return res.status(404).json({ success: false, message: "Product not found" });
     }
 
-    res.status(200).json({ success: true, message: "Product updated successfully", updatedProduct });
+    // Product updated successfully
+    res.status(200).json({ success: true, message: "Product updated successfully", updatedProduct: result });
   } catch (error) {
     // Sending error response in case of an exception
     sendErrorResponse(res, 500, error);
   }
 };
 
-// Controller for archiving a product
-const archiveProduct = async (req, res) => {
-  try {
-    // Retrieve product ID from request parameters
-    const productId = req.params.productId;
 
-    // Archive the product in the database and get the archived product
-    const archivedProduct = await Product.findByIdAndUpdate(
-      productId,
-      { isActive: false },
-      { new: true }
-    );
 
-    // Check if the product exists
-    if (!archivedProduct) {
-      return res.status(404).json({ success: false, message: "Product not found" });
-    }
-
-    res.status(200).json({ success: true, message: "Product archived successfully", archivedProduct });
-  } catch (error) {
-    // Sending error response in case of an exception
-    sendErrorResponse(res, 500, error);
-  }
+const archiveProduct = (req, res) => {
+  let updateActiveField = {
+    isActive: false
+  };
+  console.log("Updating product with ID:", req.params.productId);
+  Product.findByIdAndUpdate(req.params.productId, updateActiveField)
+    .then((product, error) => {
+      console.log("Product updated:", product);
+      if (error) {
+        console.error("Error updating product:", error);
+        return res.send(false);
+      } else {
+        return res.send(true);
+      }
+    })
+    .catch((err) => {
+      console.error("Catch block error:", err);
+      res.send(err);
+    });
 };
 
-// Controller for activating a product
-const activateProduct = async (req, res) => {
-  try {
-    // Retrieve product ID from request parameters
-    const productId = req.params.productId;
+const activateProduct = (req, res) => {
 
-    // Activate the product in the database and get the activated product
-    const activatedProduct = await Product.findByIdAndUpdate(
-      productId,
-      { isActive: true },
-      { new: true }
-    );
+  let updateActiveField = {
+    isActive: true
+  }
 
-    // Check if the product exists
-    if (!activatedProduct) {
-      return res.status(404).json({ success: false, message: "Product not found" });
+  return Product.findByIdAndUpdate(req.params.productId, updateActiveField)
+  .then((product, error) => {
+
+    if(error) {
+      return res.send(false);
+
+    } else {
+      return res.send(true);
     }
 
-    res.status(200).json({ success: true, message: "Product activated successfully", activatedProduct });
-  } catch (error) {
-    // Sending error response in case of an exception
-    sendErrorResponse(res, 500, error);
-  }
-};
+  })
+  .catch(err => res.send(err));
+}
 
 // Controller function to remove a product
 const removeProduct = async (req, res) => {
@@ -170,6 +171,24 @@ const removeProduct = async (req, res) => {
   }
 };
 
+// Controller action to search for products by product name
+const searchProductsByName = async (req, res) => {
+  try {
+    const { productName } = req.body;
+
+    // Use a regular expression to perform a case-insensitive search
+    const products = await Product.find({
+      name: { $regex: productName, $options: 'i' }
+    });
+
+    res.json(products);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+};
+
+
 // Exporting all the functions as part of the module
 module.exports = {
   createProduct,
@@ -179,7 +198,8 @@ module.exports = {
   updateProduct,
   archiveProduct,
   activateProduct,
-  removeProduct, // Add the removeProduct function
+  removeProduct, 
+  searchProductsByName// Add the removeProduct function
   // ... (Export other functions as needed)
 };
 

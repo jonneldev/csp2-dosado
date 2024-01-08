@@ -11,7 +11,7 @@ const cartRoutes = require("./routes/cart");
 const app = express();
 
 // Set the port for the server to listen on
-const port = process.env.PORT || 4001;
+const port = process.env.PORT || 4000;
 
 // Set the MongoDB URI for database connection
 const mongoURI = process.env.MONGODB_URI || "mongodb+srv://jonneldosadomain:admin123@cluster0.nnl816c.mongodb.net/ecommerce?retryWrites=true&w=majority";

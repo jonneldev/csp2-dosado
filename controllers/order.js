@@ -1,57 +1,49 @@
-// Import necessary models and modules
+const mongoose = require("mongoose");
+const auth = require("../auth");
+const Cart = require("../models/Cart");
 const Order = require("../models/Order");
 const Product = require("../models/Product");
 const User = require("../models/User");
-const auth = require("../auth");
-const mongoose = require("mongoose");
 
-// Controller to handle the checkout process
-const checkout = async (req, res) => {
+const handleError = (res, statusCode, message, error) => {
+  console.error(`Error: ${message}`, error);
+  res.status(statusCode).json({ success: false, error: "Internal Server Error" });
+};
+
+const updateOrderStatus = (orderId, newStatus, delay) => {
+  return new Promise((resolve) => {
+    setTimeout(() => {
+      Order.findByIdAndUpdate(orderId, { $set: { status: newStatus } })
+        .then(() => resolve())
+        .catch((error) => {
+          console.error(`Error updating order status to ${newStatus}:`, error);
+          resolve();
+        });
+    }, delay);
+  });
+};
+
+const placeOrder = async (req, res) => {
   const session = await mongoose.startSession();
   session.startTransaction();
+
   try {
-    const { products } = req.body;
     const userId = req.user.id;
 
-    // Retrieve product details and perform validation for each product in the order
-    const productsDetails = await Promise.all(
-      products.map(async ({ productId, quantity }) => {
-        const product = await Product.findById(productId);
+    let cart = await Cart.findOne({ userId }).populate("items.productId");
 
-        // Check if the product exists
-        if (!product) {
-          throw new Error(`Product with ID ${productId} not found`);
-        }
+    if (!cart || cart.items.length === 0) {
+      console.error("Error: Cart not found or empty");
+      return res.status(404).json({ success: false, message: "Cart not found or empty" });
+    }
 
-        // Check if there is sufficient stock for the ordered quantity
-        if (product.stock < quantity) {
-          throw new Error(`Insufficient stock for product ${product.name}`);
-        }
+    console.log("Request Body:", req.body);
 
-        const productPrice = product.price;
-        const totalPrice = productPrice * quantity;
+    const totalAmount = cart.items.reduce((total, { totalPrice }) => total + totalPrice, 0);
 
-        // Deduct the ordered quantity from the available stock
-        product.stock -= quantity;
-        await product.save();
-
-        return {
-          productId: product._id,
-          productName: product.name,
-          productPrice,
-          quantity,
-          totalPrice,
-        };
-      })
-    );
-
-    // Calculate the total amount for the order
-    const totalAmount = productsDetails.reduce((total, { totalPrice }) => total + totalPrice, 0);
-
-    // Create a new order instance and save it to the database with status "pending"
     const order = new Order({
       userId,
-      products: productsDetails.map(({ productId, productName, productPrice, quantity, totalPrice }) => ({
+      products: cart.items.map(({ productId, productName, productPrice, quantity, totalPrice }) => ({
         productId,
         productName,
         productPrice,
@@ -64,29 +56,40 @@ const checkout = async (req, res) => {
 
     await order.save();
 
-    // Set timeouts to change order status to "processing" after 1 minute and "shipped" after another 1 minute
-    setTimeout(async () => {
-      await Order.findByIdAndUpdate(order._id, { $set: { status: "processing" } });
-    }, 60000); // 1 minute
+    await updateOrderStatus(order._id, "processing", 6);
+    await updateOrderStatus(order._id, "shipped", 12);
 
-    setTimeout(async () => {
-      await Order.findByIdAndUpdate(order._id, { $set: { status: "shipped" } });
-    }, 120000); // 2 minutes
+    try {
+      const selectedProductIds = req.body.products.map((item) => item.productId);
 
-    // Commit the transaction and end the session
+      const updatedCartItems = cart.items.filter(
+        (item) => !selectedProductIds.includes(item.productId.toString())
+      );
+      cart.items = updatedCartItems;
+
+      await cart.save();
+
+      console.log("Updated Cart Items:", cart.items);
+    } catch (error) {
+      console.error("Error removing items from the cart:", error);
+      await session.abortTransaction();
+      session.endSession();
+      return res.status(500).json({ success: false, error: "Error removing items from the cart" });
+    }
+
     await session.commitTransaction();
     session.endSession();
 
-    res.status(201).json({ success: true, message: "Order created successfully", order });
+    console.log("Order placed successfully");
+
+    res.status(201).json({ success: true, message: "Order created successfully", cartItems: cart.items });
   } catch (error) {
-    // Rollback the transaction and end the session in case of an error
     await session.abortTransaction();
     session.endSession();
-
-    console.error("Error creating order:", error);
-    res.status(500).json({ success: false, error: error.message });
+    handleError(res, 500, "Error creating order", error);
   }
 };
+
 
 // Controller to retrieve orders for a verified user (excluding canceled orders)
 const getOrders = async (req, res) => {
@@ -163,10 +166,10 @@ const cancelOrder = async (req, res) => {
 
 // Exporting all the functions as part of the module
 module.exports = {
-  checkout,
+  placeOrder,
   getOrders,
   getAllOrders,
   cancelOrder,
-   // Add the new controller
+  // Add the new controller
   // ... (Export other functions as needed)
 };

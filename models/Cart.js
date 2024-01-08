@@ -13,42 +13,27 @@ const cartSchema = new mongoose.Schema({
         ref: "Product",
         required: true,
       },
+      productName: {
+        type: String,
+        ref: "Product",
+      },
+      productPrice: {
+        type: Number,
+      },
       quantity: {
         type: Number,
         required: true,
       },
-    },
-  ],
+      totalPrice: {
+        type: Number,
+      },
+    },  ],
   totalAmount: {
     type: Number,
     default: 0,
   },
 });
 
-// Calculate total amount based on items and quantities
-cartSchema.pre("save", async function (next) {
-  try {
-    this.totalAmount = await this.calculateTotalAmount();
-    next();
-  } catch (error) {
-    next(error);
-  }
-});
-
-// Method to calculate total amount
-cartSchema.methods.calculateTotalAmount = async function () {
-  const Product = mongoose.model("Product");
-
-  return (await Promise.all(
-    this.items.map(async (item) => {
-      const product = await Product.findById(item.productId);
-      if (!product) {
-        throw new Error(`Product with ID ${item.productId} not found`);
-      }
-      return product.price * item.quantity;
-    })
-  )).reduce((acc, curr) => acc + curr, 0);
-};
 
 const Cart = mongoose.model("Cart", cartSchema);
 
