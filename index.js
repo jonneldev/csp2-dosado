@@ -42,10 +42,10 @@ mongoose.connection.on('error', (err) => {
 
 // [SECTION] Backend Routes
 // Mount user, product, order, and cart routes to specific paths
-app.use("/b1/users", userRoutes);
-app.use("/b1/products", productRoutes);
-app.use("/b1/orders", orderRoutes);
-app.use("/b1/cart", cartRoutes);
+app.use("/users", userRoutes);
+app.use("/products", productRoutes);
+app.use("/orders", orderRoutes);
+app.use("/cart", cartRoutes);
 
 // [SECTION] Error Handling Middleware
 // Middleware to handle errors and send a 500 status code with an error message
